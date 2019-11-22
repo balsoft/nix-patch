@@ -1,11 +1,17 @@
 #!/bin/sh
+set -e
 PACKAGE=$1
 TMP=`mktemp -d`
-cd $TMP
 {
+    pushd $TMP
     nix-shell "<nixpkgs>" -A $PACKAGE --run "unpackPhase"
     mv * a
     cp -r a b
     $EDITOR b
 } 2>&1 > /dev/null
-diff -u --suppress-common-lines a b
+# Diff fails when files are different, we want the opposite
+diff -ur a b && code=1 || code=0
+# Be a good script and clean up
+popd > /dev/null
+rm -rf $TMP
+exit $code
