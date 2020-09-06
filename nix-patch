@@ -1,17 +1,19 @@
 #!/bin/sh
+TMP=`mktemp -d`
 set -e
 PACKAGE=$1
-TMP=`mktemp -d`
 {
     pushd $TMP
+    mkdir a && cd a
     nix-shell "<nixpkgs>" -A $PACKAGE --run "unpackPhase"
-    mv * a
+    cd ..
     cp -r a b
-    $EDITOR b
 } 2>&1 > /dev/null
+$EDITOR b
 # Diff fails when files are different, we want the opposite
 diff -ur a b && code=1 || code=0
 # Be a good script and clean up
 popd > /dev/null
 rm -rf $TMP
 exit $code
+
